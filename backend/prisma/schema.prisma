@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id           String        @id @default(uuid())
+  name         String
+  description  String
+  date         DateTime
+  venue        String
+  status       String        @default("PUBLISHED")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  seats        Seat[]
+  reservations Reservation[]
+  bookings     Booking[]
+
+  @@index([status])
+}
+
+model Seat {
+  id               String            @id @default(uuid())
+  eventId          String
+  event            Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  row              String
+  number           Int
+  section          String            @default("Standard")
+  price            Float
+  status           String            @default("AVAILABLE")
+  version          Int               @default(1)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  reservationItems ReservationItem[]
+  bookingItems     BookingItem[]
+
+  @@unique([eventId, row, number])
+  @@index([eventId, status])
+}
+
+model Reservation {
+  id         String            @id @default(uuid())
+  eventId    String
+  event      Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId     String
+  expiresAt  DateTime
+  status     String            @default("ACTIVE")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  items      ReservationItem[]
+  bookings   Booking[]
+
+  @@index([status, expiresAt])
+  @@index([userId])
+  @@index([eventId])
+}
+
+model ReservationItem {
+  id            String      @id @default(uuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  seatId        String
+  seat          Seat        @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  @@unique([reservationId, seatId])
+  @@index([seatId])
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  bookingRef    String        @unique
+  eventId       String
+  event         Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId        String
+  reservationId String?
+  reservation   Reservation?  @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  totalAmount   Float
+  status        String        @default("CONFIRMED")
+  customerName  String?
+  customerEmail String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         BookingItem[]
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+model BookingItem {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  seatId    String
+  seat      Seat    @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  price     Float
+
+  @@unique([bookingId, seatId])
+  @@index([seatId])
+}

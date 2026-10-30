@@ -4,6 +4,8 @@ import { seatController } from '../controllers/seat.controller';
 import { validate } from '../middleware/validate.middleware';
 import { createEventSchema, eventIdParamSchema } from '../schemas/event.schema';
 
+import { eventReservationRouter } from './reservation.routes';
+
 const router = Router();
 
 // Event collection & creation
@@ -15,5 +17,8 @@ router.get('/:id', validate({ params: eventIdParamSchema }), eventController.get
 
 // Seat layout and real-time availability
 router.get('/:id/seats', validate({ params: eventIdParamSchema }), seatController.getByEvent);
+
+// Nested reservation endpoint: POST /events/:id/reservations
+router.use('/:id/reservations', eventReservationRouter);
 
 export default router;

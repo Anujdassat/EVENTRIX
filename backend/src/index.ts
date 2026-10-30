@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config';
 import healthRoutes from './routes/health.routes';
+import eventRoutes from './routes/event.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api', healthRoutes);
+app.use('/api/events', eventRoutes);
 
 // Centralized Error Handling
 app.use(errorHandler);
